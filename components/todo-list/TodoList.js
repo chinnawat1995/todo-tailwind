@@ -1,43 +1,46 @@
-import axios from 'axios';
-import { useState } from 'react';
+import axios from 'axios'
 
-const TodoList = ({ tasks, reloading }) => {
-  const [show, setShow] = useState([]);
-
-  const handleShow = (index) => {
-    setShow(index);
-  };
+const TodoList = ({ tasks, reloading, setLoading }) => {
 
   const handleDelete = async (id) => {
-    await axios.delete(`/api/tasks/${id}`);
+    setLoading(true)
+    await axios.delete(`/api/tasks/${id}`)
 
-    reloading();
-  };
+    reloading()
+
+    setLoading(false)
+  }
 
   const handleUpdate = async (id, completed) => {
-    await axios.put(`/api/tasks/${id}`, { completed: !completed });
+    setLoading(true)
+    await axios.put(`/api/tasks/${id}`, { completed: !completed })
 
-    reloading();
-  };
+    reloading()
+    setLoading(false)
+  }
 
   return (
     <>
       {tasks.map((task, index) => {
         return (
           <div
-            onClick={() => handleShow(index)}
-            className="todo-list grid-cols-3 gap-4 py-2 bg-white border-2 border-blue-50 cursor-pointer"
+            className={`todo-list grid grid-flow-col gap-4 py-2 bg-white ${
+              task.completed && 'bg-opacity-50'
+            }`}
             key={task._id}>
-            <div className={`ml-2 col-span-2 h-8 text-xl ${task.completed ? 'line-through' : ''}`}>
+            <div className={`ml-2 h-5 md:h-8 text-md md:text-xl ${task.completed && 'line-through'}`}>
               {task.description}
             </div>
-            <div className={`col-span-1 text-right ${show === index ? '' : 'hidden'}`}>
+            <div className="text-right">
               <button
                 onClick={() => handleUpdate(task._id, task.completed)}
-                className="px-3 bg-green-500 hover:bg-green-600 text-white h-full mr-1">
+                disabled={task.completed}
+                className={`px-2 md:px-3 bg-green-500 hover:bg-green-600 text-white h-full mr-1 ${
+                  task.completed && 'disabled:bg-gray-500 cursor-default'
+                }`}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
+                  className="h-4 w-4 md:h-6 md:w-6"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor">
@@ -51,10 +54,10 @@ const TodoList = ({ tasks, reloading }) => {
               </button>
               <button
                 onClick={() => handleDelete(task._id)}
-                className="px-3 bg-red-600 hover:bg-red-700 text-white h-full mr-1">
+                className="px-2 md:px-3 bg-red-600 hover:bg-red-700 text-white h-full mr-1">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
+                  className="h-4 w-4 md:h-6 md:w-6"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor">
@@ -68,10 +71,10 @@ const TodoList = ({ tasks, reloading }) => {
               </button>
             </div>
           </div>
-        );
+        )
       })}
     </>
-  );
-};
+  )
+}
 
-export default TodoList;
+export default TodoList

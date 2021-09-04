@@ -1,53 +1,64 @@
-import Head from 'next/head';
-import useSWR from 'swr';
-import axios from 'axios';
-import Loader from 'react-loader-spinner';
+import Head from 'next/head'
+import useSWR from 'swr'
+import axios from 'axios'
+import Loader from 'react-loader-spinner'
 
-import Main from '@/components/layout/Main';
-import withSession from '@/lib/session';
-import TodoList from '@/components/todo-list/TodoList';
-import NotFound from '@/components/not-found/NotFound';
+import Main from '@/components/layout/Main'
+import withSession from '@/lib/session'
+import TodoList from '@/components/todo-list/TodoList'
+import NotFound from '@/components/not-found/NotFound'
+import { useState } from 'react'
 
 export default function Home(props) {
-  const fetchTasks = async (url) => {
-    const { data } = await axios.get(url);
+  const [loading, setLoading] = useState(false)
 
-    return data;
-  };
+  const fetchTasks = async (url) => {
+    const { data } = await axios.get(url)
+
+    return data
+  }
 
   const {
     data: tasks,
     isValidating,
     mutate: reloading
-  } = useSWR(['/api/tasks', props.user?.token], fetchTasks, { revalidateOnFocus: false });
+  } = useSWR(['/api/tasks'], fetchTasks, { revalidateOnFocus: false })
 
   const submitTask = async (event) => {
-    event.preventDefault();
+    setLoading(true)
+    event.preventDefault()
 
-    const { target } = event;
+    const { target } = event
 
     if (target.task.value) {
+      const description = target.task.value
+      target.task.value = ''
+
       await axios.post('/api/tasks', {
-        description: target.task.value
-      });
+        description
+      })
 
-      reloading();
+      reloading()
 
-      target.task.value = '';
+      setLoading(false)
     }
-  };
+  }
 
   const handleLoading = () => {
-    if ((!tasks || isValidating) && props.user) {
+    if (isValidating || loading) {
       return (
         <div className="w-14 m-auto">
-          <Loader type="ThreeDots" color="#60a5fa" height={30} width={50} timeout={0} />
+          <Loader type="ThreeDots" color="#ffffff" height={30} width={50} timeout={0} />
         </div>
-      );
+      )
     } else {
-      return tasks?.length ? <TodoList tasks={tasks} reloading={reloading} /> : <NotFound />;
+      return tasks?.length ? (
+        <TodoList tasks={tasks} reloading={reloading} setLoading={setLoading} />
+      ) : (
+        <NotFound />
+      )
     }
-  };
+  }
 
   return (
     <>
@@ -57,7 +68,7 @@ export default function Home(props) {
       </Head>
 
       <Main>
-        <section className="mb-5">
+        <section className="mb-5 bg-white p-1 md:p-2">
           <form className="grid grid-cols-4 gap-4" onSubmit={submitTask}>
             <input
               type="text"
@@ -67,10 +78,10 @@ export default function Home(props) {
             />
             <button
               type="submit"
-              className="col-span-1 font-bold text-white bg-blue-400 rounded-md hover:bg-blue-500">
+              className="col-span-1 font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-md">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6 m-auto"
+                className="h-4 w-4 md:h-6 md:w-6 m-auto"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor">
@@ -87,13 +98,24 @@ export default function Home(props) {
         <section className="space-y-2">{handleLoading()}</section>
       </Main>
     </>
-  );
+  )
 }
 
 export const getServerSideProps = withSession(async ({ req, res }) => {
-  return {
-    props: {
-      user: req.session.get('user') ? req.session.get('user') : ''
+  const user = req.session.get('user')
+
+  let response = {
+    props: { user }
+  }
+
+  if (!user) {
+    response = {
+      redirect: {
+        destination: '/login',
+        permanent: false
+      }
     }
-  };
-});
+  }
+
+  return response
+})

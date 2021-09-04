@@ -1,18 +1,19 @@
-import { useState } from 'react';
-import axios from 'axios';
-import { useRouter } from 'next/router';
-import { useForm } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
-import * as Yup from 'yup';
-import Head from 'next/head';
+import { useState } from 'react'
+import axios from 'axios'
+import { useRouter } from 'next/router'
+import { useForm } from 'react-hook-form'
+import { yupResolver } from '@hookform/resolvers/yup'
+import * as Yup from 'yup'
+import Head from 'next/head'
 
-import Main from '@/components/layout/Main';
-import withSession from '@/lib/session';
-import handleAuthRedirect from '@/lib/handleAuthRedirect';
+import Main from '@/components/layout/Main'
+import withSession from '@/lib/session'
+import handleAuthRedirect from '@/lib/handleAuthRedirect'
 
 export default function Register() {
-  const router = useRouter();
-  const [error, setError] = useState(false);
+  const router = useRouter()
+  const [error, setError] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   const validationSchema = Yup.object().shape({
     name: Yup.string().required('Name is required.'),
@@ -24,26 +25,28 @@ export default function Register() {
     confirmPassword: Yup.string()
       .oneOf([Yup.ref('password'), null], 'Passwords must match.')
       .required('Confirm Password is required.')
-  });
+  })
 
-  const formOption = { resolver: yupResolver(validationSchema) };
+  const formOption = { resolver: yupResolver(validationSchema) }
 
   const {
     register,
     handleSubmit,
     formState: { errors }
-  } = useForm(formOption);
+  } = useForm(formOption)
 
   const onSubmit = async (data) => {
+    setLoading(true)
     await axios
       .post('/api/register', data)
       .then(() => {
-        router.push('/');
+        router.push('/')
       })
       .catch(({ response }) => {
-        setError(response.data.message);
-      });
-  };
+        setLoading(false)
+        setError(response.data.message)
+      })
+  }
 
   return (
     <>
@@ -53,7 +56,7 @@ export default function Register() {
           <link rel="icon" href="/favicon.ico" />
         </Head>
 
-        <div className="w-2/4 m-auto p-16 border-2 border-gray-50 shadow-md rounded-lg">
+        <div className="w-full md:w-3/4 lg:w-3/5 m-auto p-8 md:p-16 border-2 bg-white border-gray-50 shadow-md rounded-lg">
           {error && (
             <>
               <p className="bg-red-100 border-2 border-opacity-25 border-red-200 rounded-md p-2 mb-2 text-red-700 font-semibold">
@@ -109,7 +112,8 @@ export default function Register() {
             <div className="grid gap-2 grid-cols-2 mt-5 w-full">
               <button
                 type="submit"
-                className="py-2 rounded-md text-white bg-green-500 hover:bg-green-600">
+                disabled={loading}
+                className="py-2 rounded-md text-white bg-pink-600 hover:bg-pink-700 disabled:bg-gray-300 disabled:text-gray-800">
                 Submit
               </button>
               <button
@@ -123,9 +127,9 @@ export default function Register() {
         </div>
       </Main>
     </>
-  );
+  )
 }
 
 export const getServerSideProps = withSession(async ({ req, res }) => {
-  return handleAuthRedirect(req, res);
-});
+  return handleAuthRedirect(req, res)
+})
