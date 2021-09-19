@@ -4,10 +4,10 @@ import axios from 'axios'
 import Loader from 'react-loader-spinner'
 
 import Main from '@/components/layout/Main'
-import withSession from '@/lib/session'
 import TodoList from '@/components/todo-list/TodoList'
 import NotFound from '@/components/not-found/NotFound'
 import { useState } from 'react'
+import { getSession } from 'next-auth/react'
 
 export default function Home(props) {
   const [loading, setLoading] = useState(false)
@@ -25,12 +25,13 @@ export default function Home(props) {
   } = useSWR(['/api/tasks'], fetchTasks, { revalidateOnFocus: false })
 
   const submitTask = async (event) => {
-    setLoading(true)
     event.preventDefault()
 
     const { target } = event
 
     if (target.task.value) {
+      setLoading(true)
+
       const description = target.task.value
       target.task.value = ''
 
@@ -101,21 +102,21 @@ export default function Home(props) {
   )
 }
 
-export const getServerSideProps = withSession(async ({ req, res }) => {
-  const user = req.session.get('user')
+export const getServerSideProps = async (context) => {
+  const session = await getSession(context)
 
   let response = {
-    props: { user }
+    props: {}
   }
 
-  if (!user) {
+  if (!session) {
     response = {
       redirect: {
-        destination: '/login',
+        destination: '/auth/login',
         permanent: false
       }
     }
   }
 
   return response
-})
+}

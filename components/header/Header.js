@@ -1,7 +1,7 @@
 import { useRouter } from 'next/router'
 import Loader from 'react-loader-spinner'
 import useUser from '@/lib/useUser'
-import axios from 'axios'
+import { signOut } from 'next-auth/react'
 
 const Header = () => {
   const router = useRouter()
@@ -43,9 +43,9 @@ const Header = () => {
   }
 
   const handleLogout = async () => {
-    await axios.post('/api/logout')
+    await signOut();
 
-    router.reload(window.location.pathname)
+    router.push('auth/login')
   }
 
   return (

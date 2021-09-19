@@ -1,11 +1,11 @@
-import withSession from '@/lib/session';
+import { getSession } from 'next-auth/react'
 
-function user(req, res) {
-  const user = req.session.get('user');
+async function user(req, res) {
+  const session = await getSession({ req })
 
   res.status(200).send({
-    ...user
-  });
+    ...session?.user
+  })
 }
 
-export default withSession(user);
+export default user

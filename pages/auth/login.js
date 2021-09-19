@@ -1,11 +1,9 @@
 import { useState } from 'react'
 import Main from '@/components/layout/Main'
-import axios from 'axios'
 import { useRouter } from 'next/router'
-import withSession from '@/lib/session'
-import handleAuthRedirect from '@/lib/handleAuthRedirect'
+import { getSession, signIn } from 'next-auth/react'
 
-export default function Login() {
+export default function Login(props) {
   const router = useRouter()
 
   const [error, setError] = useState('')
@@ -16,16 +14,18 @@ export default function Login() {
     setLoading(true)
     const { target } = event
 
-    try {
-      await axios.post('/api/login', {
-        email: target.email.value,
-        password: target.password.value
-      })
+    const { error } = await signIn('credentials', {
+      email: target.email.value,
+      password: target.password.value,
+      callbackUrl: `${window.location.origin}`,
+      redirect: false
+    })
 
-      router.push('/')
-    } catch ({ response }) {
+    if (error) {
       setLoading(false)
-      setError(response.data.message)
+      setError(error)
+    } else {
+      router.push('/')
     }
   }
 
@@ -41,6 +41,7 @@ export default function Login() {
             </>
           )}
           <form onSubmit={handleSubmit}>
+            <input name="csrfToken" type="hidden" defaultValue={props.csrfToken} />
             <div className="grid grid-cols-1 w-full">
               <label className="mb-2" htmlFor="email">
                 Email
@@ -84,6 +85,21 @@ export default function Login() {
   )
 }
 
-export const getServerSideProps = withSession(async ({ req, res }) => {
-  return handleAuthRedirect(req, res)
-})
+export const getServerSideProps = async (context) => {
+  const session = await getSession(context)
+
+  let response = {
+    props: {}
+  }
+
+  if (session) {
+    response = {
+      redirect: {
+        destination: '/',
+        permanent: false
+      }
+    }
+  }
+
+  return response
+}
