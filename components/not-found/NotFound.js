@@ -1,7 +1,7 @@
 const NotFound = () => {
   return (
     <div className="flex justify-center items-center py-2 text-white">
-      <span className="text-xl mr-2">You haven't added task yet.</span>
+      <span data-test="notFoundPage" className="text-xl mr-2">You haven't added task yet.</span>
       <svg
         xmlns="http://www.w3.org/2000/svg"
         className="h-10 w-10"
